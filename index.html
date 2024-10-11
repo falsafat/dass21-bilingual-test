@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DASS-21 Test - Bilingual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3e5d0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #ffe5b4;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #ff6700;
+        }
+        .form-section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            color: #4a2c2a;
+        }
+        .rtl {
+            direction: rtl;
+            text-align: right;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #ff6700;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #e64a19;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f7d8ba;
+            border-radius: 4px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DASS Test<br>Depression, Anxiety, and Stress Scale<br>اختبار لتقييم مستويات الاكتئاب والقلق والتوتر لديك</h1>
+        <h2 style="color: #4a2c2a;">Select Language / اختر اللغة</h2>
+        <div class="form-section" style="display: flex; gap: 10px; justify-content: center;">
+            <button style="flex: 1;" onclick="showTest('en')">English</button>
+            <button style="flex: 1;" onclick="showTest('ar')">العربية</button>
+        </div>
+
+        <form id="dassForm" style="display:none;" onsubmit="calculateScore(event)" novalidate>
+            <div id="questions" class="form-section"></div>
+            <button id="submitButton" type="submit">Get Results / الحصول على النتائج</button>
+        </form>
+
+        <div id="results" class="results" style="display:none;"></div>
+    </div>
+
+    <script>
+        let lang = 'en';
+        
+        const questionsEn = [
+            "I found it hard to 'wind down'",
+            "I was aware of dryness of my mouth",
+            "I couldn't seem to experience any positive feelings at all",
+            "I experienced breathing difficulty",
+            "I found it difficult to work up the initiative to do things",
+            "I tended to over-react to situations",
+            "I experienced trembling (e.g., in the hands)",
+            "I felt that I was using a lot of nervous energy",
+            "I was worried about situations in which I might panic and make a fool of myself",
+            "I felt that I had nothing to look forward to",
+            "I found myself getting agitated",
+            "I found it difficult to relax",
+            "I felt down-hearted and blue",
+            "I was intolerant of anything that kept me from getting on with what I was doing",
+            "I felt I was close to panic",
+            "I was unable to become enthusiastic about anything",
+            "I felt I wasn't worth much as a person",
+            "I felt that I was rather touchy",
+            "I was aware of the action of my heart in the absence of physical exertion (e.g., sense of heart rate increase, heart 'missing a beat')",
+            "I felt scared without any good reason",
+            "I felt that life was meaningless"
+        ];
+
+        const questionsAr = [
+            "وجدت صعوبة في الاسترخاء والراحة",
+            "شعرت بجفاف في حلقي",
+            "لم يبدو لي أن بإمكاني الإحساس بمشاعر إيجابية على الإطلاق",
+            "شعرت بصعوبة في التنفس",
+            "وجدت صعوبة في أخذ المبادرة بعمل الأشياء",
+            "كنت أميل إلى ردة فعل مفرطة للظروف والأحداث",
+            "شعرت برجفة (باليدين مثلًا)",
+            "شعرت بأنني أستهلك الكثير من الطاقة العصبية",
+            "كنت قلقًا بشأن مواقف قد أفقد فيها السيطرة على نفسي وأبدو بشكل أحمق",
+            "شعرت بأنه ليس لدي ما أتطلع إليه",
+            "وجدت نفسي منزعجًا ومضطربًا",
+            "وجدت صعوبة في الاسترخاء",
+            "شعرت بالحزن والكآبة",
+            "كنت لا أطيق أي شيء يعيقني عن إنجاز ما أقوم به",
+            "شعرت بأنني على وشك الذعر",
+            "لم أكن قادرًا على الشعور بالحماس لأي شيء",
+            "شعرت بأنني لا أستحق كثيرًا كشخص",
+            "شعرت بأنني سريع الغضب",
+            "شعرت بضربات قلبي بدون مجهود جسدي (مثل زيادة في معدل النبض أو غياب دقة)",
+            "شعرت بالخوف بدون أي سبب وجيه",
+            "شعرت بأن الحياة ليس لها معنى"
+        ];
+
+        function showTest(selectedLang) {
+            lang = selectedLang;
+            const introParagraph = document.createElement('p');
+            introParagraph.innerHTML = lang === 'en' ? 'Please answer the following questions based on how you have felt during the past week.' : 'يرجى الإجابة على الأسئلة التالية بناءً على شعورك خلال الأسبوع الماضي.';
+            introParagraph.style.fontSize = '1.5em';
+            introParagraph.style.fontWeight = 'bold';
+            introParagraph.className = lang === 'ar' ? 'rtl' : '';
+            const questionsDiv = document.getElementById('questions');
+            questionsDiv.innerHTML = '';
+            questionsDiv.appendChild(introParagraph);
+            const submitButton = document.getElementById('submitButton');
+            submitButton.innerHTML = lang === 'en' ? 'Get Results' : 'الحصول على النتائج';
+            const form = document.getElementById('dassForm');
+
+            const questions = lang === 'en' ? questionsEn : questionsAr;
+            questionsDiv.className = lang === 'ar' ? 'rtl' : '';
+
+            questions.forEach((question, index) => {
+                const separator = document.createElement('hr');
+                separator.style.margin = '20px 0';
+                questionsDiv.appendChild(separator);
+                const space = document.createElement('div');
+                space.style.marginTop = '20px';
+                questionsDiv.appendChild(space);
+                const label = document.createElement('label');
+                label.innerHTML = `${index + 1}. ${question}`;
+                label.style.fontWeight = 'bold';
+                label.style.color = '#4a2c2a';
+                questionsDiv.appendChild(label);
+
+                const options = lang === 'en' ? [
+                    "0 = Did not apply to me at all",
+                    "1 = Applied to me to some degree or for some of the time",
+                    "2 = Applied to me to a considerable degree or for a good part of time",
+                    "3 = Applied to me very much or most of the time"
+                ] : [
+                    "0 = لا ينطبق عليّ بتاتاً",
+                    "1 = ينطبق عليّ بعض الشيء أو قليلًا من الأوقات",
+                    "2 = ينطبق عليّ بدرجة ملحوظة أو بعض الأوقات",
+                    "3 = ينطبق عليّ كثيراً جداً، أو معظم الأوقات"
+                ];
+
+                options.forEach((option, optIndex) => {
+                    const optionLabel = document.createElement('label');
+                    optionLabel.style.display = 'block';
+                    const radioInput = document.createElement('input');
+                    radioInput.type = 'radio';
+                    radioInput.name = `q${index + 1}`;
+                    radioInput.value = optIndex;
+                    optionLabel.appendChild(radioInput);
+                    optionLabel.appendChild(document.createTextNode(` ${option}`));
+                    questionsDiv.appendChild(optionLabel);
+                });
+            });
+
+            form.style.display = 'block';
+        }
+
+        function calculateScore(event) {
+            event.preventDefault();
+            let depression = 0, anxiety = 0, stress = 0;
+            const depressionQuestions = [3, 5, 10, 13, 16, 17, 21];
+            const anxietyQuestions = [2, 4, 7, 9, 15, 19, 20];
+            const stressQuestions = [1, 6, 8, 11, 12, 14, 18];
+
+            const unansweredQuestions = [];
+            for (let i = 1; i <= 21; i++) {
+                const selectedOption = document.querySelector(`input[name="q${i}"]:checked`);
+                if (!selectedOption) {
+                    unansweredQuestions.push(i);
+                }
+            }
+
+            if (unansweredQuestions.length > 0) {
+                const resultsDiv = document.getElementById('results');
+                const questionsText = unansweredQuestions.join(', ');
+                resultsDiv.innerHTML = lang === 'en' 
+                    ? `<strong style="color: red;">There are unanswered questions: ${questionsText}. To get accurate results, please make sure all questions are answered.</strong>`
+                    : `<strong style="color: red;">هناك أسئلة لم يتم الإجابة عليها: ${questionsText}. للحصول على نتائج دقيقة، يرجى التأكد من الإجابة على جميع الأسئلة.</strong>`;
+                resultsDiv.style.display = 'block';
+                resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            for (let i = 1; i <= 21; i++) {
+                const selectedOption = document.querySelector(`input[name="q${i}"]:checked`);
+                const value = parseInt(selectedOption.value);
+                if (depressionQuestions.includes(i)) depression += value;
+                else if (anxietyQuestions.includes(i)) anxiety += value;
+                else if (stressQuestions.includes(i)) stress += value;
+            }
+
+            depression *= 2;
+            anxiety *= 2;
+            stress *= 2;
+
+            const resultsDiv = document.getElementById('results');
+            if (lang === 'en') {
+                resultsDiv.innerHTML = `<strong>Depression Score:</strong> ${depression} / 42<br>` +
+                    `<p>Your depression score falls into the category of: ${getDepressionCategory(depression)}</p>` +
+                    `<strong>Anxiety Score:</strong> ${anxiety} / 42<br>` +
+                    `<p>Your anxiety score falls into the category of: ${getAnxietyCategory(anxiety)}</p>` +
+                    `<strong>Stress Score:</strong> ${stress} / 42<br>` +
+                    `<p>Your stress score falls into the category of: ${getStressCategory(stress)}</p>`;
+                resultsDiv.innerHTML += '<p>If you are concerned in any way about your health, please consult with a qualified health professional.</p>';
+            } else {
+                resultsDiv.className = 'rtl results';
+                resultsDiv.innerHTML = `<strong>درجة الاكتئاب:</strong> ${depression} / 42<br>` +
+                    `<p>تصنيف درجة الاكتئاب لديك هو: ${getDepressionCategoryAr(depression)}</p>` +
+                    `<strong>درجة القلق:</strong> ${anxiety} / 42<br>` +
+                    `<p>تصنيف درجة القلق لديك هو: ${getAnxietyCategoryAr(anxiety)}</p>` +
+                    `<strong>درجة التوتر:</strong> ${stress} / 42<br>` +
+                    `<p>تصنيف درجة التوتر لديك هو: ${getStressCategoryAr(stress)}</p>`;
+                resultsDiv.innerHTML += '<p>إذا كنت قلقًا بشأن صحتك بأي شكل من الأشكال، يُرجى استشارة مختص مؤهل في الرعاية الصحية.</p>';
+            }
+            resultsDiv.style.display = 'block';
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function getDepressionCategory(score) {
+            if (score <= 9) return 'Normal';
+            else if (score <= 13) return 'Mild';
+            else if (score <= 20) return 'Moderate';
+            else if (score <= 27) return 'Severe';
+            else return 'Extremely Severe';
+        }
+
+        function getAnxietyCategory(score) {
+            if (score <= 7) return 'Normal';
+            else if (score <= 9) return 'Mild';
+            else if (score <= 14) return 'Moderate';
+            else if (score <= 19) return 'Severe';
+            else return 'Extremely Severe';
+        }
+
+        function getStressCategory(score) {
+            if (score <= 14) return 'Normal';
+            else if (score <= 18) return 'Mild';
+            else if (score <= 25) return 'Moderate';
+            else if (score <= 33) return 'Severe';
+            else return 'Extremely Severe';
+        }
+
+        function getDepressionCategoryAr(score) {
+            if (score <= 9) return 'طبيعي';
+            else if (score <= 13) return 'خفيف';
+            else if (score <= 20) return 'متوسط';
+            else if (score <= 27) return 'شديد';
+            else return 'شديد للغاية';
+        }
+
+        function getAnxietyCategoryAr(score) {
+            if (score <= 7) return 'طبيعي';
+            else if (score <= 9) return 'خفيف';
+            else if (score <= 14) return 'متوسط';
+            else if (score <= 19) return 'شديد';
+            else return 'شديد للغاية';
+        }
+
+        function getStressCategoryAr(score) {
+            if (score <= 14) return 'طبيعي';
+            else if (score <= 18) return 'خفيف';
+            else if (score <= 25) return 'متوسط';
+            else if (score <= 33) return 'شديد';
+            else return 'شديد للغاية';
+        }
+    </script>
+</body>
+</html>
