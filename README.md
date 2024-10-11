@@ -24,7 +24,7 @@ This project is a web-based implementation of the Depression 😔, Anxiety 😨,
 
 1. **📂 Clone the Repository**:
    ```sh
-   git clone https://github.com/yourusername/dass21-bilingual-test.git
+   git clone https://github.com/falsafat/dass21-bilingual-test.git
    ```
 2. **🌐 Open the HTML File**: Navigate to the project directory and open the `index.html` file in your preferred web browser.
 
